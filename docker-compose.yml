@@ -1,0 +1,64 @@
+services:
+  react-app:
+    build:
+      context: ./react-app
+      dockerfile: Dockerfile
+    ports:
+      - "9100:9100"
+    depends_on:
+      - express-app
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+    networks:
+      - app-network
+
+  express-app:
+    build:
+      context: ./express-app
+      dockerfile: Dockerfile
+    ports:
+      - "9200:9200"
+    depends_on:
+      - mysql
+    environment:
+      - PORT=9200
+      - DB_HOST=mysql
+      - DB_USER=user
+      - DB_PASSWORD=userpassword
+      - DB_NAME=mydb
+    networks:
+      - app-network
+
+  mysql:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - "9300:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+volumes:
+  mysql-data:
+
+networks:
+  app-network:
